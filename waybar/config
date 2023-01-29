@@ -1,0 +1,81 @@
+{
+ 	"layer": "top", 		// Waybar at top layer
+	"position": "top", 		// Waybar position (top|bottom|left|right)
+	"height": 30, 			// Waybar height (to be removed for auto height)
+	"spacing": 5, 			// Gaps between modules (4px)
+    	"margin-top": 0,
+    	"margin-bottom":0, 
+	"modules-left": ["sway/workspaces","clock"],
+    "modules-center": ["sway/window"],
+	"modules-right": ["tray","memory","network","pulseaudio","battery"],
+    
+// Modules configuration
+    
+	"sway/workspaces": {
+     		"disable-scroll": true,
+     		"format": "{name}",
+	},
+    	
+	"tray": {
+		// "icon-size": 21,
+		"spacing": 10
+    	},
+    "memory": {
+        "format": "{}%    ",
+        "interval": 2
+    },
+    "pulseaudio": {
+        // "scroll-step": 1, // %, can be a float
+        "format": "{volume}% {icon}   {format_source}",
+        "format-bluetooth": "{volume}% {icon}  {format_source}",
+        "format-bluetooth-muted": " {icon}  {format_source}",
+        "format-muted": " {format_source}",
+        "format-source": "{volume}% ",
+        "format-source-muted": "",
+        "format-icons": {
+            "headphone": "",
+            // "hands-free": "",
+            // "headset": "",
+            "phone": "",
+            "portable": "",
+            "car": "",
+            "default": ["", "", ""]
+        },
+        "on-click": "pavucontrol"
+    },
+	"clock": {
+        	"tooltip-format": "<big>{:%Y %B}</big>\n<tt><small>{calendar}</small></tt>",
+		"format": "{:%A, %B %d %Y     %I:%M:%S %p}",
+        "interval": 1
+    	},
+    	
+    "battery": {
+        "states": {
+            // "good": 95,
+            "warning": 30,
+            "critical": 15
+        },
+        "format": "{capacity}% {icon}",
+        "format-charging": "{capacity}% ",
+        "format-plugged": "{capacity}% ",
+        "format-alt": "{time} {icon}",
+        // "format-good": "", // An empty format will hide the module
+        // "format-full": "",
+        "format-icons": ["", "", "", "", ""]
+    },
+    	
+    "network": {
+        // "interface": "*", // (Optional) To force the use of this interface
+        "format-wifi": "{bandwidthUpBits}  {bandwidthDownBits}        {essid}  ",
+        "format-ethernet": "{ipaddr}/{cidr} ",
+        // "tooltip-format": "{ifname} via {gwaddr} ",
+        "tooltip-format": "{ifname}: {ipaddr}/{cidr}",
+        "format-linked": "{ifname} (No IP) ",
+        "format-disconnected": "Disconnected ⚠",
+        "interval": 2
+    },
+
+
+
+}
+

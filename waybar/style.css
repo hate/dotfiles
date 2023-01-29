@@ -1,0 +1,141 @@
+* {
+    font-family: IBM Plex Mono;
+    font-size: 13px;
+    font-weight: bold;
+    /*border-radius: 5px */
+}
+#clock,
+#battery,
+#temperature,
+#custom-memory,
+#custom-netspeed,
+#custom-layout,
+#backlight,
+#network,
+#pulseaudio,
+#tray,
+#mode {
+	padding: 0 10px;
+	color: #ffffff;
+	background-color: black;
+    	border-radius: 0px;
+}
+
+window#waybar {
+    background-color: black;
+    color: #ffffff; 
+}
+
+window#waybar.hidden {
+    opacity: 0.2;
+}
+
+#workspaces button {
+    margin:  0 2px 0 2px;
+    padding: 0 7px;
+    background-color: black;
+    color: #ffffff;   
+    border-radius: 0px;
+}
+
+#workspaces button.focused {
+    background-color: white;
+    color: black;
+}
+
+#workspaces button.urgent {
+    background-color: red;
+    color: white;
+}
+
+#mode {
+    background-color: black;
+}
+
+.modules-left > widget:first-child > #workspaces {
+    margin-left: 0;
+}
+
+.modules-right > widget:last-child > #workspaces {
+    margin-right: 0;
+}
+
+#clock {
+    background-color: black;
+}
+
+#battery {
+    background-color: black;
+    color: white;
+}
+
+#battery.charging, #battery.plugged {
+    color: white;
+    background-color: green;
+}
+
+#battery.warning:not(.charging) {
+    background-color: orange;
+    color: black;
+    }
+@keyframes blink {
+    to {
+        background-color: #ffffff;
+        color: #000000;
+    }
+}
+
+#battery.critical:not(.charging) {
+    background-color: red;
+    color:white;
+    animation-name: blink;
+    animation-duration: 1s;
+    animation-timing-function: linear;
+    animation-iteration-count: infinite;
+    animation-direction: alternate;
+}
+
+label:focus {
+    background-color: #000000;
+}
+
+#backlight {
+    background-color: black;
+}
+
+#network {
+    background-color: black;
+}
+
+#network.disconnected {
+    background-color: red;
+}
+
+#pulseaudio {
+    /*background-color: #f1c40f;*/
+    background-color: black;
+    color: white;
+}
+
+
+#temperature {
+    background-color: black;
+}
+
+#temperature.critical {
+    background-color: red;
+    color: white;
+}
+
+#tray {
+    background-color: black;
+}
+
+#tray > .passive {
+    -gtk-icon-effect: dim;
+}
+
+#tray > .needs-attention {
+    -gtk-icon-effect: highlight;
+    background-color: #eb4d4b;
+}
