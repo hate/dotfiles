@@ -351,6 +351,8 @@ require("lazy").setup({
             { "<leader>fc", "<cmd>Telescope git_commits<cr>", desc = "Git commits" },
             { "<leader>fs", "<cmd>Telescope git_status<cr>", desc = "Git status" },
             { "<leader>fd", "<cmd>Telescope diagnostics<cr>", desc = "Diagnostics" },
+            { "<leader>fo", "<cmd>Telescope lsp_document_symbols<cr>", desc = "Document symbols (outline)" },
+            { "<leader>fO", "<cmd>Telescope lsp_workspace_symbols<cr>", desc = "Workspace symbols" },
             { "<leader>/", "<cmd>Telescope current_buffer_fuzzy_find<cr>", desc = "Search in buffer" },
             { "<C-p>", "<cmd>Telescope find_files<cr>", desc = "Find files" },
         },
@@ -380,19 +382,32 @@ require("lazy").setup({
         "nvim-treesitter/nvim-treesitter",
         build = ":TSUpdate",
         event = { "BufReadPost", "BufNewFile" },
-        opts = {
-            ensure_installed = {
-                "bash", "c", "cpp", "css", "html", "javascript", "json", "lua", "luadoc",
-                "markdown", "markdown_inline", "python", "query", "rust", "scss", "sql",
-                "toml", "tsx", "typescript", "vim", "vimdoc", "yaml",
-            },
-            auto_install = true,
-            highlight = { enable = true },
-            indent = { enable = true },
-        },
-        config = function(_, opts)
-            require("nvim-treesitter.configs").setup(opts)
+        config = function()
+            local ok, configs = pcall(require, "nvim-treesitter.configs")
+            if ok then
+                configs.setup({
+                    ensure_installed = {
+                        "bash", "c", "cpp", "css", "html", "javascript", "json", "lua", "luadoc",
+                        "markdown", "markdown_inline", "python", "query", "rust", "scss", "sql",
+                        "toml", "tsx", "typescript", "vim", "vimdoc", "yaml",
+                    },
+                    auto_install = true,
+                    highlight = { enable = true },
+                    indent = { enable = true },
+                })
+            end
         end,
+    },
+
+    -- LSP progress indicator
+    {
+        "j-hui/fidget.nvim",
+        event = "LspAttach",
+        opts = {
+            notification = {
+                window = { winblend = 0 },
+            },
+        },
     },
 
     -- Mason
@@ -404,8 +419,8 @@ require("lazy").setup({
         dependencies = { "mason-org/mason.nvim", "neovim/nvim-lspconfig" },
         opts = {
             ensure_installed = {
-                "rust_analyzer", "pyright", "ruff_lsp", "clangd", "lua_ls",
-                "tsserver", "html", "cssls", "emmet_ls", "bashls", "sqlls",
+                "rust_analyzer", "pyright", "ruff", "clangd", "lua_ls",
+                "ts_ls", "html", "cssls", "emmet_ls", "bashls", "sqlls",
             },
             automatic_enable = true,
         },
@@ -423,8 +438,19 @@ require("lazy").setup({
             vim.lsp.config("rust_analyzer", {
                 settings = {
                     ["rust-analyzer"] = {
-                        cargo = { features = "all" },
+                        cargo = { allFeatures = true },
                         check = { command = "clippy" },
+                        completion = {
+                            addCallArgumentSnippets = true,
+                            addCallParenthesis = true,
+                        },
+                        inlayHints = {
+                            bindingModeHints = { enable = true },
+                            chainingHints = { enable = true },
+                            parameterHints = { enable = true },
+                            typeHints = { enable = true },
+                            closingBraceHints = { enable = true, minLines = 20 },
+                        },
                     },
                 },
             })
@@ -441,6 +467,29 @@ require("lazy").setup({
                     if client and client:supports_method("textDocument/completion") then
                         vim.lsp.completion.enable(true, client.id, ev.buf, { autotrigger = true })
                     end
+                    if client and client:supports_method("textDocument/inlayHint") then
+                        vim.lsp.inlay_hint.enable(true, { bufnr = ev.buf })
+                    end
+
+                    local function m(mode, lhs, rhs, desc)
+                        vim.keymap.set(mode, lhs, rhs, { buffer = ev.buf, desc = desc })
+                    end
+                    m("n", "K", vim.lsp.buf.hover, "Hover docs")
+                    m("n", "gd", vim.lsp.buf.definition, "Go to definition")
+                    m("n", "gD", vim.lsp.buf.declaration, "Go to declaration")
+                    m("n", "gi", vim.lsp.buf.implementation, "Go to implementation")
+                    m("n", "gr", vim.lsp.buf.references, "Find references")
+                    m("n", "<leader>rn", vim.lsp.buf.rename, "Rename symbol")
+                    m("n", "<leader>ca", vim.lsp.buf.code_action, "Code action")
+                    m("n", "<C-k>", vim.lsp.buf.signature_help, "Signature help")
+                    m("i", "<C-k>", vim.lsp.buf.signature_help, "Signature help")
+                    m("n", "[d", vim.diagnostic.goto_prev, "Prev diagnostic")
+                    m("n", "]d", vim.diagnostic.goto_next, "Next diagnostic")
+                    m("n", "<leader>d", vim.diagnostic.open_float, "Diagnostic float")
+                    m("n", "gy", vim.lsp.buf.type_definition, "Type definition")
+                    m("n", "<leader>th", function()
+                        vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled())
+                    end, "Toggle inlay hints")
                 end,
             })
 
@@ -480,10 +529,18 @@ require("lazy").setup({
     {
         "hrsh7th/nvim-cmp",
         event = "InsertEnter",
-        dependencies = { "hrsh7th/cmp-nvim-lsp", "hrsh7th/cmp-path" },
+        dependencies = {
+            "hrsh7th/cmp-nvim-lsp",
+            "hrsh7th/cmp-path",
+            "hrsh7th/cmp-nvim-lsp-signature-help",
+        },
         config = function()
             local cmp = require("cmp")
             cmp.setup({
+                window = {
+                    completion = cmp.config.window.bordered(),
+                    documentation = cmp.config.window.bordered(),
+                },
                 mapping = cmp.mapping.preset.insert({
                     ["<C-n>"] = cmp.mapping.select_next_item(),
                     ["<C-p>"] = cmp.mapping.select_prev_item(),
@@ -495,8 +552,19 @@ require("lazy").setup({
                 }),
                 sources = cmp.config.sources({
                     { name = "nvim_lsp" },
+                    { name = "nvim_lsp_signature_help" },
                     { name = "path" },
                 }),
+                formatting = {
+                    format = function(entry, vim_item)
+                        vim_item.menu = ({
+                            nvim_lsp = "[LSP]",
+                            nvim_lsp_signature_help = "[Sig]",
+                            path = "[Path]",
+                        })[entry.source.name]
+                        return vim_item
+                    end,
+                },
                 experimental = { ghost_text = true },
             })
         end,
