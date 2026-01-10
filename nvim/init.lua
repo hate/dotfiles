@@ -477,7 +477,6 @@ require("lazy").setup({
                     m("n", "gr", vim.lsp.buf.references, "Find references")
                     m("n", "<leader>rn", vim.lsp.buf.rename, "Rename symbol")
                     m("n", "<leader>ca", vim.lsp.buf.code_action, "Code action")
-                    m("i", "<C-k>", vim.lsp.buf.signature_help, "Signature help")
                     m("n", "[d", vim.diagnostic.goto_prev, "Prev diagnostic")
                     m("n", "]d", vim.diagnostic.goto_next, "Next diagnostic")
                     m("n", "<leader>d", vim.diagnostic.open_float, "Diagnostic float")
