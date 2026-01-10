@@ -81,6 +81,8 @@ map("v", "J", ":m '>+1<cr>gv=gv", { silent = true, desc = "Move lines down" })
 map("v", "K", ":m '<-2<cr>gv=gv", { silent = true, desc = "Move lines up" })
 map("v", "p", '"_dP', { desc = "Paste (no yank)" })
 map("n", "J", "mzJ`z", { desc = "Join lines" })
+map("n", "<C-M-j>", "<C-e>", { desc = "Scroll down" })
+map("n", "<C-M-k>", "<C-y>", { desc = "Scroll up" })
 
 --------------------------------------------------
 -- Autocmds
@@ -334,46 +336,40 @@ require("lazy").setup({
         end,
     },
 
-    -- Telescope
+    -- FZF
     {
-        "nvim-telescope/telescope.nvim",
-        branch = "0.1.x",
-        dependencies = {
-            "nvim-lua/plenary.nvim",
-            { "nvim-telescope/telescope-fzf-native.nvim", build = "make", cond = function() return vim.fn.executable("make") == 1 end },
-        },
+        "ibhagwan/fzf-lua",
+        dependencies = { "nvim-tree/nvim-web-devicons" },
         keys = {
-            { "<leader>ff", "<cmd>Telescope find_files<cr>", desc = "Find files" },
-            { "<leader>fg", "<cmd>Telescope live_grep<cr>", desc = "Live grep" },
-            { "<leader>fb", "<cmd>Telescope buffers<cr>", desc = "Buffers" },
-            { "<leader>fh", "<cmd>Telescope help_tags<cr>", desc = "Help tags" },
-            { "<leader>fr", "<cmd>Telescope oldfiles<cr>", desc = "Recent files" },
-            { "<leader>fc", "<cmd>Telescope git_commits<cr>", desc = "Git commits" },
-            { "<leader>fs", "<cmd>Telescope git_status<cr>", desc = "Git status" },
-            { "<leader>fd", "<cmd>Telescope diagnostics<cr>", desc = "Diagnostics" },
-            { "<leader>fo", "<cmd>Telescope lsp_document_symbols<cr>", desc = "Document symbols (outline)" },
-            { "<leader>fO", "<cmd>Telescope lsp_workspace_symbols<cr>", desc = "Workspace symbols" },
-            { "<leader>/", "<cmd>Telescope current_buffer_fuzzy_find<cr>", desc = "Search in buffer" },
-            { "<C-p>", "<cmd>Telescope find_files<cr>", desc = "Find files" },
+            { "<leader>ff", "<cmd>FzfLua files<cr>", desc = "Find files" },
+            { "<leader>fg", "<cmd>FzfLua live_grep<cr>", desc = "Live grep" },
+            { "<leader>fb", "<cmd>FzfLua buffers<cr>", desc = "Buffers" },
+            { "<leader>fh", "<cmd>FzfLua help_tags<cr>", desc = "Help tags" },
+            { "<leader>fr", "<cmd>FzfLua oldfiles<cr>", desc = "Recent files" },
+            { "<leader>fc", "<cmd>FzfLua git_commits<cr>", desc = "Git commits" },
+            { "<leader>fs", "<cmd>FzfLua git_status<cr>", desc = "Git status" },
+            { "<leader>fd", "<cmd>FzfLua diagnostics_document<cr>", desc = "Diagnostics" },
+            { "<leader>fo", "<cmd>FzfLua lsp_document_symbols<cr>", desc = "Document symbols (outline)" },
+            { "<leader>fO", "<cmd>FzfLua lsp_workspace_symbols<cr>", desc = "Workspace symbols" },
+            { "<leader>/", "<cmd>FzfLua blines<cr>", desc = "Search in buffer" },
+            { "<C-p>", "<cmd>FzfLua files<cr>", desc = "Find files" },
         },
         config = function()
-            local telescope = require("telescope")
-            local actions = require("telescope.actions")
-            telescope.setup({
-                defaults = {
-                    file_ignore_patterns = { "node_modules", ".git/", "target/" },
-                    mappings = {
-                        i = {
-                            ["<C-j>"] = actions.move_selection_next,
-                            ["<C-k>"] = actions.move_selection_previous,
-                            ["<C-q>"] = actions.send_selected_to_qflist + actions.open_qflist,
-                            ["<Esc>"] = actions.close,
-                        },
+            require("fzf-lua").setup({
+                winopts = { preview = { default = "bat" } },
+                files = {
+                    fd_opts = "--color=never --type f --hidden --follow --exclude .git --exclude node_modules --exclude target",
+                },
+                keymap = {
+                    fzf = {
+                        ["ctrl-q"] = "select-all+accept",
+                    },
+                    builtin = {
+                        ["<C-j>"] = "preview-page-down",
+                        ["<C-k>"] = "preview-page-up",
                     },
                 },
-                pickers = { find_files = { hidden = true } },
             })
-            pcall(telescope.load_extension, "fzf")
         end,
     },
 
@@ -481,7 +477,6 @@ require("lazy").setup({
                     m("n", "gr", vim.lsp.buf.references, "Find references")
                     m("n", "<leader>rn", vim.lsp.buf.rename, "Rename symbol")
                     m("n", "<leader>ca", vim.lsp.buf.code_action, "Code action")
-                    m("n", "<C-k>", vim.lsp.buf.signature_help, "Signature help")
                     m("i", "<C-k>", vim.lsp.buf.signature_help, "Signature help")
                     m("n", "[d", vim.diagnostic.goto_prev, "Prev diagnostic")
                     m("n", "]d", vim.diagnostic.goto_next, "Next diagnostic")
@@ -501,6 +496,18 @@ require("lazy").setup({
                 severity_sort = true,
             })
         end,
+    },
+
+    -- LSP Signature (auto show function signatures)
+    {
+        "ray-x/lsp_signature.nvim",
+        event = "LspAttach",
+        opts = {
+            hint_enable = false,
+            handler_opts = { border = "rounded" },
+            floating_window = true,
+            floating_window_above_cur_line = true,
+        },
     },
 
     -- Conform (formatters)
