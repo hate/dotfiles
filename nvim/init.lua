@@ -68,6 +68,7 @@ map("n", "j", "gj", { silent = true, desc = "Down (visual line)" })
 map("n", "k", "gk", { silent = true, desc = "Up (visual line)" })
 map("n", "<Esc>", "<cmd>nohlsearch<cr>", { desc = "Clear search highlight" })
 map("n", "<leader>,", "<cmd>set invlist<cr>", { desc = "Toggle hidden chars" })
+map("n", "<leader>?", "<cmd>e ~/.config/keybinds-cheatsheet.md<cr>", { desc = "Keybind cheatsheet" })
 map("n", "<C-Up>", "<cmd>resize +2<cr>", { desc = "Increase window height" })
 map("n", "<C-Down>", "<cmd>resize -2<cr>", { desc = "Decrease window height" })
 map("n", "<C-Left>", "<cmd>vertical resize -2<cr>", { desc = "Decrease window width" })
@@ -140,6 +141,15 @@ autocmd("FileType", {
     callback = function(ev)
         vim.bo[ev.buf].buflisted = false
         map("n", "q", "<cmd>close<cr>", { buffer = ev.buf, silent = true })
+    end,
+})
+
+autocmd("BufRead", {
+    group = augroup("cheatsheet_close", { clear = true }),
+    pattern = "*keybinds-cheatsheet.md",
+    callback = function(ev)
+        vim.bo[ev.buf].buflisted = false
+        map("n", "q", "<cmd>bdelete<cr>", { buffer = ev.buf, silent = true })
     end,
 })
 
@@ -270,6 +280,8 @@ require("lazy").setup({
                 ["<CR>"] = "actions.select",
                 ["<C-v>"] = "actions.select_vsplit",
                 ["<C-s>"] = "actions.select_split",
+                ["<C-h>"] = false,  -- Let vim-tmux-navigator handle this
+                ["<C-l>"] = false,  -- Let vim-tmux-navigator handle this
                 ["<C-t>"] = "actions.select_tab",
                 ["<C-p>"] = "actions.preview",
                 ["<C-c>"] = "actions.close",
