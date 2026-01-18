@@ -37,6 +37,7 @@ opt.backup = false
 opt.swapfile = false
 opt.completeopt = "menu,menuone,noselect"
 opt.updatetime = 250
+opt.autoread = true  -- Auto-reload files when changed externally (needed for opencode.nvim)
 opt.timeoutlen = 300
 opt.wildmode = "list:longest"
 opt.wildignore = ".hg,.svn,*~,*.png,*.jpg,*.gif,*.min.js,*.swp,*.o,vendor,dist,_site"
@@ -433,7 +434,7 @@ require("lazy").setup({
         opts = {
             ensure_installed = {
                 "rust_analyzer", "pyright", "ruff", "clangd", "lua_ls",
-                "ts_ls", "html", "cssls", "emmet_ls", "bashls", "sqlls",
+                "ts_ls", "html", "cssls", "emmet_ls", "bashls", "sqlls", "gopls",
             },
             automatic_enable = true,
         },
@@ -630,6 +631,90 @@ require("lazy").setup({
         keys = {
             { "<leader>gg", "<cmd>LazyGit<cr>", desc = "LazyGit" },
         },
+    },
+
+    -- Snacks (UI utilities, dependency for opencode.nvim)
+    {
+        "folke/snacks.nvim",
+        lazy = false,
+        priority = 900,
+        opts = { input = {}, picker = {}, terminal = {} },
+    },
+
+    -- GitHub Copilot
+    {
+        "zbirenbaum/copilot.lua",
+        cmd = "Copilot",
+        event = "InsertEnter",
+        config = function()
+            require("copilot").setup({
+                suggestion = {
+                    enabled = true,
+                    auto_trigger = true,
+                    keymap = {
+                        accept = "<Tab>",
+                        accept_word = "<C-Right>",
+                        accept_line = "<C-l>",
+                        next = "<M-]>",
+                        prev = "<M-[>",
+                        dismiss = "<C-]>",
+                    },
+                },
+                panel = { enabled = true },
+                filetypes = {
+                    markdown = true,
+                    help = false,
+                },
+            })
+            -- Toggle auto-suggestions
+            vim.keymap.set("n", "<leader>ct", function()
+                require("copilot.suggestion").toggle_auto_trigger()
+            end, { desc = "Toggle Copilot" })
+        end,
+    },
+
+    -- OpenCode (AI assistant integration)
+    {
+        "NickvanDyke/opencode.nvim",
+        dependencies = { "folke/snacks.nvim" },
+        config = function()
+            vim.g.opencode_opts = {}
+
+            -- Ask with @this context prefix (auto-submits)
+            vim.keymap.set({ "n", "x" }, "<C-a>", function()
+                require("opencode").ask("@this: ", { submit = true })
+            end, { desc = "Ask opencode" })
+
+            -- Select menu for prompts/commands
+            vim.keymap.set({ "n", "x" }, "<C-x>", function()
+                require("opencode").select()
+            end, { desc = "OpenCode action" })
+
+            -- Toggle opencode terminal
+            vim.keymap.set({ "n", "t" }, "<leader>oo", function()
+                require("opencode").toggle()
+            end, { desc = "Toggle opencode" })
+
+            -- Operator for range-aware prompts (supports dot-repeat)
+            vim.keymap.set({ "n", "x" }, "go", function()
+                return require("opencode").operator("@this ")
+            end, { desc = "Add range to opencode", expr = true })
+            vim.keymap.set("n", "goo", function()
+                return require("opencode").operator("@this ") .. "_"
+            end, { desc = "Add line to opencode", expr = true })
+
+            -- Scroll opencode terminal
+            vim.keymap.set("n", "<S-C-u>", function()
+                require("opencode").command("session.half.page.up")
+            end, { desc = "Scroll opencode up" })
+            vim.keymap.set("n", "<S-C-d>", function()
+                require("opencode").command("session.half.page.down")
+            end, { desc = "Scroll opencode down" })
+
+            -- Remap increment/decrement since <C-a>/<C-x> are taken
+            vim.keymap.set("n", "+", "<C-a>", { desc = "Increment", noremap = true })
+            vim.keymap.set("n", "-", "<C-x>", { desc = "Decrement", noremap = true })
+        end,
     },
 
 }, {
