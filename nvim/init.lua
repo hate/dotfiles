@@ -84,6 +84,8 @@ map("v", "p", '"_dP', { desc = "Paste (no yank)" })
 map("n", "J", "mzJ`z", { desc = "Join lines" })
 map("n", "<C-M-j>", "<C-e>", { desc = "Scroll down" })
 map("n", "<C-M-k>", "<C-y>", { desc = "Scroll up" })
+map("i", "jk", "<Esc>", { desc = "Exit insert mode" })
+map("t", "jk", [[<C-\><C-n>]], { desc = "Exit terminal mode" })
 
 --------------------------------------------------
 -- Autocmds
@@ -247,6 +249,9 @@ require("lazy").setup({
             open_mapping = [[<C-`>]],
             direction = "float",
             float_opts = { border = "curved" },
+            on_open = function(term)
+                vim.keymap.set("t", "jk", [[<C-\><C-n>]], { buffer = term.bufnr, desc = "Exit terminal mode" })
+            end,
         },
     },
 
