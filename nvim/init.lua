@@ -37,7 +37,7 @@ opt.backup = false
 opt.swapfile = false
 opt.completeopt = "menu,menuone,noselect"
 opt.updatetime = 250
-opt.autoread = true  -- Auto-reload files when changed externally (needed for opencode.nvim)
+opt.autoread = true
 opt.timeoutlen = 300
 opt.wildmode = "list:longest"
 opt.wildignore = ".hg,.svn,*~,*.png,*.jpg,*.gif,*.min.js,*.swp,*.o,vendor,dist,_site"
@@ -230,7 +230,16 @@ require("lazy").setup({
     },
 
     -- Tmux navigation
-    { "christoomey/vim-tmux-navigator", lazy = false },
+    {
+        "christoomey/vim-tmux-navigator",
+        lazy = false,
+        init = function()
+            vim.keymap.set("t", "<C-h>", [[<C-\><C-n><C-h>]], { desc = "Navigate left" })
+            vim.keymap.set("t", "<C-j>", [[<C-\><C-n><C-j>]], { desc = "Navigate down" })
+            vim.keymap.set("t", "<C-k>", [[<C-\><C-n><C-k>]], { desc = "Navigate up" })
+            vim.keymap.set("t", "<C-l>", [[<C-\><C-n><C-l>]], { desc = "Navigate right" })
+        end,
+    },
 
     -- Terminal
     {
@@ -633,14 +642,6 @@ require("lazy").setup({
         },
     },
 
-    -- Snacks (UI utilities, dependency for opencode.nvim)
-    {
-        "folke/snacks.nvim",
-        lazy = false,
-        priority = 900,
-        opts = { input = {}, picker = {}, terminal = {} },
-    },
-
     -- GitHub Copilot
     {
         "zbirenbaum/copilot.lua",
@@ -670,50 +671,6 @@ require("lazy").setup({
             vim.keymap.set("n", "<leader>ct", function()
                 require("copilot.suggestion").toggle_auto_trigger()
             end, { desc = "Toggle Copilot" })
-        end,
-    },
-
-    -- OpenCode (AI assistant integration)
-    {
-        "NickvanDyke/opencode.nvim",
-        dependencies = { "folke/snacks.nvim" },
-        config = function()
-            vim.g.opencode_opts = {}
-
-            -- Ask with @this context prefix (auto-submits)
-            vim.keymap.set({ "n", "x" }, "<C-a>", function()
-                require("opencode").ask("@this: ", { submit = true })
-            end, { desc = "Ask opencode" })
-
-            -- Select menu for prompts/commands
-            vim.keymap.set({ "n", "x" }, "<C-x>", function()
-                require("opencode").select()
-            end, { desc = "OpenCode action" })
-
-            -- Toggle opencode terminal
-            vim.keymap.set({ "n", "t" }, "<leader>oo", function()
-                require("opencode").toggle()
-            end, { desc = "Toggle opencode" })
-
-            -- Operator for range-aware prompts (supports dot-repeat)
-            vim.keymap.set({ "n", "x" }, "go", function()
-                return require("opencode").operator("@this ")
-            end, { desc = "Add range to opencode", expr = true })
-            vim.keymap.set("n", "goo", function()
-                return require("opencode").operator("@this ") .. "_"
-            end, { desc = "Add line to opencode", expr = true })
-
-            -- Scroll opencode terminal
-            vim.keymap.set("n", "<S-C-u>", function()
-                require("opencode").command("session.half.page.up")
-            end, { desc = "Scroll opencode up" })
-            vim.keymap.set("n", "<S-C-d>", function()
-                require("opencode").command("session.half.page.down")
-            end, { desc = "Scroll opencode down" })
-
-            -- Remap increment/decrement since <C-a>/<C-x> are taken
-            vim.keymap.set("n", "+", "<C-a>", { desc = "Increment", noremap = true })
-            vim.keymap.set("n", "-", "<C-x>", { desc = "Decrement", noremap = true })
         end,
     },
 
