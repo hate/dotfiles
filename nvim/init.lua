@@ -283,33 +283,88 @@ require("lazy").setup({
         lazy = false,
         keys = {
             { "-", "<cmd>Oil<cr>", desc = "Open parent directory" },
-            { "<leader>e", "<cmd>Oil<cr>", desc = "File explorer" },
-        },
-        opts = {
-            default_file_explorer = true,
-            delete_to_trash = true,
-            skip_confirm_for_simple_edits = true,
-            view_options = { show_hidden = true },
-            keymaps = {
-                ["g?"] = "actions.show_help",
-                ["<CR>"] = "actions.select",
-                ["<C-v>"] = "actions.select_vsplit",
-                ["<C-s>"] = "actions.select_split",
-                ["<C-h>"] = false,  -- Let vim-tmux-navigator handle this
-                ["<C-l>"] = false,  -- Let vim-tmux-navigator handle this
-                ["<C-t>"] = "actions.select_tab",
-                ["<C-p>"] = "actions.preview",
-                ["<C-c>"] = "actions.close",
-                ["<C-r>"] = "actions.refresh",
-                ["-"] = "actions.parent",
-                ["_"] = "actions.open_cwd",
-                ["`"] = "actions.cd",
-                ["~"] = "actions.tcd",
-                ["gs"] = "actions.change_sort",
-                ["gx"] = "actions.open_external",
-                ["g."] = "actions.toggle_hidden",
+            {
+                "<leader>e",
+                function()
+                    for _, win in ipairs(vim.api.nvim_list_wins()) do
+                        if vim.w[win].oil_sidebar then
+                            vim.api.nvim_win_close(win, true)
+                            return
+                        end
+                    end
+                    vim.cmd("botright vnew")
+                    vim.api.nvim_win_set_width(0, 36)
+                    vim.w.oil_sidebar = true
+                    vim.wo.winfixwidth = true
+                    require("oil").open(vim.fn.getcwd())
+                end,
+                desc = "Toggle file explorer sidebar",
             },
         },
+        config = function()
+            local function sidebar_select()
+                local oil = require("oil")
+                local entry = oil.get_cursor_entry()
+                if not entry then return end
+                if entry.type == "directory" then
+                    oil.select()
+                    return
+                end
+                local dir = oil.get_current_dir()
+                if not dir then return end
+                local filepath = dir .. entry.name
+                -- When in sidebar, open file in the first non-oil window
+                if vim.w.oil_sidebar then
+                    for _, win in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
+                        if not vim.w[win].oil_sidebar then
+                            vim.api.nvim_set_current_win(win)
+                            vim.cmd("edit " .. vim.fn.fnameescape(filepath))
+                            return
+                        end
+                    end
+                end
+                oil.select()
+            end
+
+            require("oil").setup({
+                default_file_explorer = true,
+                delete_to_trash = true,
+                skip_confirm_for_simple_edits = true,
+                view_options = { show_hidden = true },
+                keymaps = {
+                    ["g?"] = "actions.show_help",
+                    ["<CR>"] = { callback = sidebar_select, desc = "Open file" },
+                    ["<C-v>"] = "actions.select_vsplit",
+                    ["<C-s>"] = "actions.select_split",
+                    ["<C-h>"] = false,
+                    ["<C-l>"] = false,
+                    ["<C-t>"] = "actions.select_tab",
+                    ["<C-p>"] = {
+                        "actions.preview",
+                        opts = { split = "belowright" },
+                    },
+                    ["<C-c>"] = "actions.close",
+                    ["<C-r>"] = "actions.refresh",
+                    ["-"] = "actions.parent",
+                    ["_"] = "actions.open_cwd",
+                    ["`"] = "actions.cd",
+                    ["~"] = "actions.tcd",
+                    ["gs"] = "actions.change_sort",
+                    ["gx"] = "actions.open_external",
+                    ["g."] = "actions.toggle_hidden",
+                    ["q"] = {
+                        callback = function()
+                            if vim.w.oil_sidebar then
+                                vim.api.nvim_win_close(0, true)
+                            else
+                                require("oil.actions").close.callback()
+                            end
+                        end,
+                        desc = "Close",
+                    },
+                },
+            })
+        end,
     },
 
     -- Harpoon
