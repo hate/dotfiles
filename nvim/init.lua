@@ -477,6 +477,16 @@ require("lazy").setup({
         end,
     },
 
+    -- Markdown rendering
+    {
+        "OXY2DEV/markview.nvim",
+        lazy = false, -- plugin author's recommendation: it handles lazy-loading internally
+        keys = {
+            { "<leader>mv", "<cmd>Markview toggle<cr>", desc = "Toggle markdown rendering" },
+            { "<leader>ms", "<cmd>Markview splitToggle<cr>", desc = "Markdown split preview" },
+        },
+    },
+
     -- LSP progress indicator
     {
         "j-hui/fidget.nvim",
